@@ -77,7 +77,7 @@ static void MX_USART3_UART_Init(void);
 static void MX_USART4_UART_Init(void);
 static void MX_USART6_UART_Init(void);
 /* USER CODE BEGIN PFP */
-
+void iolink_main();
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -525,7 +525,23 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) {
+  if (huart->Instance == USART2) {
+    HAL_GPIO_WritePin(TXEN1_GPIO_Port, TXEN1_Pin, GPIO_PIN_RESET);
+  } else if (huart->Instance == USART3) {
+    HAL_GPIO_WritePin(TXEN2_GPIO_Port, TXEN2_Pin, GPIO_PIN_RESET);
+  } else if (huart->Instance == USART4) {
+    HAL_GPIO_WritePin(TXEN3_GPIO_Port, TXEN3_Pin, GPIO_PIN_RESET);
+  } else if (huart->Instance == USART6) {
+    HAL_GPIO_WritePin(TXEN4_GPIO_Port, TXEN4_Pin, GPIO_PIN_RESET);
+  }
+}
 
+int _write(int file, char *ptr, int len) {
+  (void)file;
+  HAL_UART_Transmit(&huart1, (uint8_t *)ptr, len, HAL_MAX_DELAY);
+  return len;
+}
 /* USER CODE END 4 */
 
 /**
