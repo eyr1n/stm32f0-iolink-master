@@ -5,8 +5,6 @@
 
 #include "stm32f0xx_hal.h"
 
-#include "iolink_util.hpp"
-
 namespace ltc2874 {
 
 enum class Command : uint8_t {
@@ -180,12 +178,16 @@ enum class CTRL2_Bit : uint8_t {
   SIO_MODE1 = 0x1,
 };
 
+template <class T> constexpr std::underlying_type_t<T> to_underlying(T value) noexcept {
+  return static_cast<std::underlying_type_t<T>>(value);
+}
+
 class LTC2874 {
 public:
   LTC2874(SPI_HandleTypeDef *hspi) : hspi_(hspi) {}
 
   uint8_t read(Register reg) {
-    uint8_t command = iolink::to_underlying(Command::READ) | (iolink::to_underlying(reg) << 1);
+    uint8_t command = to_underlying(Command::READ) | (to_underlying(reg) << 1);
     uint8_t tx[2] = {0, command};
     uint8_t rx[2] = {};
     HAL_SPI_TransmitReceive(hspi_, tx, rx, 1, HAL_MAX_DELAY);
@@ -193,25 +195,24 @@ public:
   }
 
   void write(Register reg, uint8_t data, bool update = false) {
-    uint8_t command =
-        iolink::to_underlying(update ? Command::WRTUPD : Command::WRITE) | (iolink::to_underlying(reg) << 1);
+    uint8_t command = to_underlying(update ? Command::WRTUPD : Command::WRITE) | (to_underlying(reg) << 1);
     uint8_t tx[] = {data, command};
     HAL_SPI_Transmit(hspi_, tx, 1, HAL_MAX_DELAY);
   }
 
   void update() {
-    uint8_t tx[] = {0x0, iolink::to_underlying(Command::UPDATE)};
+    uint8_t tx[] = {0x0, to_underlying(Command::UPDATE)};
     HAL_SPI_Transmit(hspi_, tx, 1, HAL_MAX_DELAY);
   }
 
   void reset() {
-    uint8_t tx[] = {0x0, iolink::to_underlying(Command::RESET)};
+    uint8_t tx[] = {0x0, to_underlying(Command::RESET)};
     HAL_SPI_Transmit(hspi_, tx, 1, HAL_MAX_DELAY);
   }
 
   template <class Bit> void write_value(Register reg, Bit bit, uint8_t value, bool update = false) {
     uint8_t data = read(reg);
-    uint8_t mask = iolink::to_underlying(bit);
+    uint8_t mask = to_underlying(bit);
     data &= ~mask;
     for (uint8_t i = 0; i < 8; ++i) {
       if (mask & (1 << i)) {
